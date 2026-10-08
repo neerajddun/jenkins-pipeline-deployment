@@ -1,0 +1,75 @@
+pipeline {
+
+    agent any 
+
+    environment {
+
+        IMAGE_NAME = "flash-app"
+        IMAGE_TAG = "v1.${BUILD_NUMBER}"
+    }
+
+    stages {
+
+        stage('checkout') {
+            
+            steps {
+
+              checkout scm 
+
+            }
+        }
+
+        stage('unit test') {
+            
+            steps {
+
+              sh 'mvn test'
+              
+            }
+        }
+
+        stage('Integration Test') {
+            
+            steps {
+
+              sh 'mvn verify -DskipTests -B'
+              
+            }
+        }
+
+        stage('Docker Build') {
+            
+            steps {
+
+              sh 'docker build -t ${IMAGE_NAME}.${IMAGE_TAG} .'
+              
+            }
+        }
+
+        stage('Docker Push') {
+            
+            steps {
+
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'dockerPass', usernameVariable: 'dockerName')]) {
+                
+                sh '''
+
+                  echo ${dockerPass} | docker login -u ${dockerName} --password-stdin
+
+                  docker tag ${IMAGE_NAME}.${IMAGE_TAG} neeraj91/${IMAGE_NAME}.${IMAGE_TAG} 
+                  
+                  docker tag ${IMAGE_NAME}.${IMAGE_TAG} neeraj91/${IMAGE_NAME}.latest
+
+                  docker push  neeraj91/${IMAGE_NAME}.${IMAGE_TAG}
+
+                  docker push  neeraj91/${IMAGE_NAME}.latest
+
+                  '''
+            
+                }
+              
+            }
+        }
+
+    }
+}
