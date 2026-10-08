@@ -19,25 +19,7 @@ pipeline {
             }
         }
 
-        stage('unit test') {
-            
-            steps {
-
-              sh 'mvn test'
-              
-            }
-        }
-
-        stage('Integration Test') {
-            
-            steps {
-
-              sh 'mvn verify -DskipTests -B'
-              
-            }
-        }
-
-        stage('Docker Build') {
+        stage('Build and Test') {
             
             steps {
 
